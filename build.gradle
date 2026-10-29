@@ -1,0 +1,57 @@
+plugins {
+    id "java-library"
+    id "maven-publish"
+}
+
+// Interfaces and events of VileKingdoms for the addons: the only artifact they compile against.
+// Built alone in the public repository, group and version come from its gradle.properties (or from JitPack).
+if (rootProject != project) {
+    group = rootProject.group
+    version = rootProject.version
+}
+description = "VileKingdoms-API"
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "papermc-repo"
+        url = "https://repo.papermc.io/repository/maven-public/"
+    }
+}
+
+dependencies {
+    compileOnly "io.papermc.paper:paper-api:26.3.build.227-stable"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 25
+    options.compilerArgs += ['-Xlint:all,-processing']
+}
+
+base {
+    archivesName = 'VileKingdoms-API'
+}
+
+tasks.named('javadoc', Javadoc).configure { Javadoc javadoc ->
+    javadoc.options.encoding = 'UTF-8'
+    // The members whose name says everything (getId, getName...) have no comment.
+    (javadoc.options as StandardJavadocDocletOptions).addStringOption('Xdoclint:all,-missing', '-quiet')
+}
+
+publishing {
+    publications {
+        create('maven', MavenPublication) { MavenPublication publication ->
+            publication.artifactId = 'VileKingdoms-API'
+            publication.from(components.java)
+        }
+    }
+}

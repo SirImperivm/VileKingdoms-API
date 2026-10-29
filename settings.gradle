@@ -1,0 +1,6 @@
+plugins {
+    // Downloads the JDK 25 of the toolchain when the machine building the API does not have it (e.g. JitPack).
+    id "org.gradle.toolchains.foojay-resolver-convention" version "1.0.0"
+}
+
+rootProject.name = "VileKingdoms-API"
