@@ -50,7 +50,13 @@ public interface VileKingdomsAPI {
     /** @param name the name or the display name of the town */
     @NotNull Optional<Town> getTown(@NotNull String name);
 
-    /** @return the town owning the chunk of the location */
+    /**
+     * @return the side of the lands in blocks, the unit of the claims: the same for every world, and never changing
+     * once the first town is founded
+     */
+    int getLandSize();
+
+    /** @return the town owning the land of the location */
     @NotNull Optional<Town> getTownAt(@NotNull Location location);
 
     /** @return the towns the player is a member of */

@@ -1,6 +1,6 @@
 # VileKingdoms API
 
-Version 1.0.3
+Version 1.0.4
 
 The API of VileKingdoms lets the addons read the kingdoms, the towns, the structures and the wars of the server, and
 react to everything that happens to them through Bukkit events. Most actions have an event called **before**, that
@@ -27,7 +27,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly "com.github.SirImperivm:VileKingdoms-API:1.0.3"
+    compileOnly "com.github.SirImperivm:VileKingdoms-API:1.0.4"
 }
 ```
 
@@ -44,7 +44,7 @@ dependencies {
 <dependency>
     <groupId>com.github.SirImperivm</groupId>
     <artifactId>VileKingdoms-API</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -103,7 +103,8 @@ lookups are empty.
 | `getPrimaryKingdom(UUID player)` | the kingdom of the town the player manages, otherwise the one they rule, otherwise the first by name |
 | `getTowns()` | every town |
 | `getTown(UUID)`, `getTown(String)` | the town by id, or by name or display name |
-| `getTownAt(Location)` | the town owning the chunk of the location |
+| `getLandSize()` | the side of the lands in blocks, the unit of the claims: it never changes once the first town is founded |
+| `getTownAt(Location)` | the town owning the land of the location |
 | `getTownsOf(UUID player)` | the towns the player is a member of |
 | `getWarOf(Town)` | the war in progress of the town |
 | `getActiveWars()` | the wars in progress |
@@ -123,7 +124,7 @@ The lookups return an `Optional`, empty when the object does not exist.
 ### Town
 
 `getId()`, `getName()`, `getDisplayName()`, `getKingdom()`, `getRank()`, `getStyle()`, `getMembers()`,
-`isMember(UUID)`, `getRoleName(UUID)`, `getClaims()`, `hasClaim(ChunkPosition)`, `getBank()`, `getEmeralds()`,
+`isMember(UUID)`, `getRoleName(UUID)`, `getClaims()`, `hasClaim(LandPosition)`, `getBank()`, `getEmeralds()`,
 `getWorth()`, `getImmuneUntil()`, `isDestroyed()`, `getStructures()`, `getSpawn()`.
 
 ### Structure
@@ -134,7 +135,7 @@ The lookups return an `Optional`, empty when the object does not exist.
 ### War
 
 `getId()`, `getAttackerId()`, `getDefenderId()`, `getAttacker()`, `getDefender()`, `getDeclarerId()`, `getStake()`,
-`getSquad()`, `getStartedAt()`, `getEndedAt()`, `getOutcome()`, `getContestedChunks()`.
+`getSquad()`, `getStartedAt()`, `getEndedAt()`, `getOutcome()`, `getContestedLands()`.
 
 ### Values
 
@@ -144,7 +145,7 @@ The lookups return an `Optional`, empty when the object does not exist.
 | `StructureType` | `TOWN_HALL`, `EMERALD_EXTRACTOR`, `EMERALD_COLLECTOR`, `RESIDENCE`, `DEPOT` |
 | `WarOutcome` | `NONE` (in progress), `ATTACKER_WON`, `DEFENDER_WON`, `ABANDONED`, `DRAW` |
 | `LeaveReason` | `LEFT`, `KICKED`, `BANNED`, `REMOVED_BY_ADMIN`, `TAX_NOT_PAID`, `ENEMY_CONFLICT`, `TOWN_RELEASED` |
-| `ChunkPosition` | record of `world`, `x`, `z` of a chunk, with `ChunkPosition.of(Chunk)` and `ChunkPosition.of(Location)` |
+| `LandPosition` | record of `world`, `x`, `z` of a land (the block coordinates divided by the side of the lands), with `LandPosition.of(Location)`, `getMinBlockX()` and `getMinBlockZ()` |
 
 ## 5. Events
 
@@ -156,7 +157,7 @@ public final class ClaimListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPreClaim(TownPreClaimEvent event) {
-        if (event.getChunk().world().equals("spawn")) {
+        if (event.getLand().world().equals("spawn")) {
             event.setCancelled(true);
             if (event.getPlayer() != null) event.getPlayer().sendMessage("You cannot claim in the spawn world.");
         }
@@ -164,7 +165,7 @@ public final class ClaimListener implements Listener {
 
     @EventHandler
     public void onClaim(TownClaimEvent event) {
-        Bukkit.getLogger().info(event.getTown().getName() + " claimed " + event.getChunk());
+        Bukkit.getLogger().info(event.getTown().getName() + " claimed " + event.getLand());
     }
 }
 ```
@@ -174,7 +175,7 @@ addon tells the player why. The server owner can still configure a message in `k
 the locales, empty by default.
 
 Some actions have only the event after them: the releases of every claim of a town (`/town admin release-all-for`, the claims
-over the limit of a lost rank) call a `TownUnclaimEvent` for each chunk, and the members kicked by the conquest of a
+over the limit of a lost rank) call a `TownUnclaimEvent` for each land, and the members kicked by the conquest of a
 town call a `TownMemberLeaveEvent`.
 
 ### Kingdoms
@@ -194,20 +195,20 @@ town call a `TownMemberLeaveEvent`.
 | Event | Cancellable | When | Getters |
 |---|---|---|---|
 | `TownCapitalChangeEvent` | no | Called when the king has chosen a new capital. | `getKingdom()` Kingdom: the kingdom<br>`getOldCapital()` Town: the capital it had<br>`getNewCapital()` Town: the new capital |
-| `TownClaimEvent` | no | Called when a chunk has been claimed for a town. | `getTown()` Town: the town<br>`getChunk()` ChunkPosition: the chunk<br>`getPlayer()` Player: who claimed it |
+| `TownClaimEvent` | no | Called when a land has been claimed for a town. | `getTown()` Town: the town<br>`getLand()` LandPosition: the land<br>`getPlayer()` Player: who claimed it |
 | `TownFoundEvent` | no | Called when a town has been founded. | `getTown()` Town: the new town<br>`getFounder()` Player: its first leader |
 | `TownKingdomChangeEvent` | no | Called when a town now belongs to another kingdom, conquered in a war. | `getTown()` Town: the town<br>`getOldKingdomId()` UUID: the kingdom it belonged to<br>`getNewKingdom()` Kingdom: its new kingdom |
 | `TownMemberJoinEvent` | no | Called when a player has joined a town. | `getTown()` Town: the town<br>`getMember()` UUID: the new member |
 | `TownMemberLeaveEvent` | no | Called when a player is not a member of a town anymore. | `getTown()` Town: the town<br>`getMember()` UUID: the former member<br>`getReason()` LeaveReason: why |
 | `TownMemberPreJoinEvent` | yes | Called before a player joins a town. | `getTown()` Town: the town<br>`getPlayer()` Player: the player joining it |
-| `TownPreClaimEvent` | yes | Called before a chunk is claimed for a town, by a member or by an admin. | `getTown()` Town: the town<br>`getChunk()` ChunkPosition: the chunk<br>`getPlayer()` Player: who claims it |
-| `TownPreFoundEvent` | yes | Called before a player founds a town for their kingdom. | `getFounder()` Player: the founder, its first leader<br>`getKingdom()` Kingdom: the kingdom of the town<br>`getDisplayName()` String: the display name chosen<br>`getChunk()` ChunkPosition: the chunk of the town hall |
+| `TownPreClaimEvent` | yes | Called before a land is claimed for a town, by a member or by an admin. | `getTown()` Town: the town<br>`getLand()` LandPosition: the land<br>`getPlayer()` Player: who claims it |
+| `TownPreFoundEvent` | yes | Called before a player founds a town for their kingdom. | `getFounder()` Player: the founder, its first leader<br>`getKingdom()` Kingdom: the kingdom of the town<br>`getDisplayName()` String: the display name chosen<br>`getLand()` LandPosition: the land of the town hall |
 | `TownPreRankUpEvent` | yes | Called before a town reaches the next rank. | `getTown()` Town: the town<br>`getPlayer()` Player: the player making the action<br>`getNewRank()` int: the rank it reaches |
 | `TownPreReleaseEvent` | yes | Called before a town is released by its members or by an admin. | `getTown()` Town: the town<br>`getActor()` CommandSender: who releases it |
-| `TownPreUnclaimEvent` | yes | Called before a chunk of a town is released by a member or by an admin. | `getTown()` Town: the town<br>`getChunk()` ChunkPosition: the chunk<br>`getPlayer()` Player: who releases it |
+| `TownPreUnclaimEvent` | yes | Called before a land of a town is released by a member or by an admin. | `getTown()` Town: the town<br>`getLand()` LandPosition: the land<br>`getPlayer()` Player: who releases it |
 | `TownRankChangeEvent` | no | Called when the rank of a town has changed: ranked up, or lost. | `getTown()` Town: the town, with its new rank<br>`getOldRank()` int: the rank it had |
 | `TownReleaseEvent` | no | Called when a town has been released: it does not exist anymore. | `getTownId()` UUID: the id the town had<br>`getName()` String: the name the town had<br>`getKingdomId()` UUID: the kingdom the town belonged to |
-| `TownUnclaimEvent` | no | Called when a chunk of a town has been released. | `getTown()` Town: the town<br>`getChunk()` ChunkPosition: the chunk<br>`getPlayer()` Player: who released it |
+| `TownUnclaimEvent` | no | Called when a land of a town has been released. | `getTown()` Town: the town<br>`getLand()` LandPosition: the land<br>`getPlayer()` Player: who released it |
 
 ### Structures and defenses
 
@@ -227,9 +228,9 @@ town call a `TownMemberLeaveEvent`.
 
 | Event | Cancellable | When | Getters |
 |---|---|---|---|
-| `WarChunkContestEvent` | no | Called when the attackers have contested a chunk of the defender. | `getWar()` War: the war<br>`getChunk()` ChunkPosition: the contested chunk |
 | `WarDeclareEvent` | no | Called when a war has been declared and started. | `getWar()` War: the war |
 | `WarEndEvent` | no | Called when a war has ended. | `getWar()` War: the war, with its outcome<br>`getOutcome()` WarOutcome: the outcome<br>`getPaid()` double: the money paid between the banks |
+| `WarLandContestEvent` | no | Called when the attackers have contested a land of the defender. | `getWar()` War: the war<br>`getLand()` LandPosition: the contested land |
 | `WarPeriodEndEvent` | no | Called when a period of war has ended and a period of peace has started. | `isPermanentPeace()` boolean: whether the peace lasts until an admin starts a period of war |
 | `WarPeriodStartEvent` | no | Called when a period of war has started: the wars can be declared. | `getEndsAt()` long: when the period ends, in epoch milliseconds |
 | `WarPreDeclareEvent` | yes | Called before a town declares war on a town of an enemy kingdom. | `getAttacker()` Town: the attacking town<br>`getDefender()` Town: the defending town<br>`getDeclarer()` Player: the player declaring the war<br>`getStake()` double: the stake of the war |
@@ -278,4 +279,4 @@ With WorldGuard installed VileKingdoms registers these state flags, all allowed 
 |---|---|
 | `kingdoms-enabled` | no `/kingdom` and `/town` command works in the region, but the admin ones |
 | `towns-enabled` | no `/town` command works in the region, but the admin ones |
-| `town-claims-enabled` | the chunks touching the region, even in part, cannot be claimed nor released; the automatic claim and release stop entering them. The admin claims and releases, `/town admin release-all-for` included, still work |
+| `town-claims-enabled` | the lands touching the region, even in part, cannot be claimed nor released; the automatic claim and release stop entering them. The admin claims and releases, `/town admin release-all-for` included, still work |

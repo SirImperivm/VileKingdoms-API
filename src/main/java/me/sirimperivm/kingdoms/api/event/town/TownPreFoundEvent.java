@@ -1,7 +1,7 @@
 package me.sirimperivm.kingdoms.api.event.town;
 
 import me.sirimperivm.kingdoms.api.event.CancellableVileKingdomsEvent;
-import me.sirimperivm.kingdoms.api.model.ChunkPosition;
+import me.sirimperivm.kingdoms.api.model.LandPosition;
 import me.sirimperivm.kingdoms.api.model.Kingdom;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
@@ -17,7 +17,7 @@ public class TownPreFoundEvent extends CancellableVileKingdomsEvent {
     private final Player founder;
     private final Kingdom kingdom;
     private final String displayName;
-    private final ChunkPosition chunk;
+    private final LandPosition land;
 
     /**
      * Creates the event.
@@ -25,13 +25,13 @@ public class TownPreFoundEvent extends CancellableVileKingdomsEvent {
      * @param founder the founder, its first leader
      * @param kingdom the kingdom of the town
      * @param displayName the display name chosen
-     * @param chunk the chunk of the town hall
+     * @param land the land of the town hall
      */
-    public TownPreFoundEvent(@NotNull Player founder, @NotNull Kingdom kingdom, @NotNull String displayName, @NotNull ChunkPosition chunk) {
+    public TownPreFoundEvent(@NotNull Player founder, @NotNull Kingdom kingdom, @NotNull String displayName, @NotNull LandPosition land) {
         this.founder = founder;
         this.kingdom = kingdom;
         this.displayName = displayName;
-        this.chunk = chunk;
+        this.land = land;
     }
 
     /**
@@ -56,10 +56,10 @@ public class TownPreFoundEvent extends CancellableVileKingdomsEvent {
     }
 
     /**
-     * @return the chunk of the town hall
+     * @return the land of the town hall
      */
-    public @NotNull ChunkPosition getChunk() {
-        return chunk;
+    public @NotNull LandPosition getLand() {
+        return land;
     }
 
     @Override

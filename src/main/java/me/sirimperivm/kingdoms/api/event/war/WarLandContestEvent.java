@@ -1,30 +1,30 @@
 package me.sirimperivm.kingdoms.api.event.war;
 
 import me.sirimperivm.kingdoms.api.event.VileKingdomsEvent;
-import me.sirimperivm.kingdoms.api.model.ChunkPosition;
+import me.sirimperivm.kingdoms.api.model.LandPosition;
 import me.sirimperivm.kingdoms.api.model.War;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Called when the attackers have contested a chunk of the defender.
+ * Called when the attackers have contested a land of the defender.
  */
-public class WarChunkContestEvent extends VileKingdomsEvent {
+public class WarLandContestEvent extends VileKingdomsEvent {
 
     private static final HandlerList HANDLERS = new HandlerList();
 
     private final War war;
-    private final ChunkPosition chunk;
+    private final LandPosition land;
 
     /**
      * Creates the event.
      *
      * @param war the war
-     * @param chunk the contested chunk
+     * @param land the contested land
      */
-    public WarChunkContestEvent(@NotNull War war, @NotNull ChunkPosition chunk) {
+    public WarLandContestEvent(@NotNull War war, @NotNull LandPosition land) {
         this.war = war;
-        this.chunk = chunk;
+        this.land = land;
     }
 
     /**
@@ -35,10 +35,10 @@ public class WarChunkContestEvent extends VileKingdomsEvent {
     }
 
     /**
-     * @return the contested chunk
+     * @return the contested land
      */
-    public @NotNull ChunkPosition getChunk() {
-        return chunk;
+    public @NotNull LandPosition getLand() {
+        return land;
     }
 
     @Override

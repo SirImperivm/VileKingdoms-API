@@ -39,6 +39,6 @@ public interface War {
 
     @NotNull WarOutcome getOutcome();
 
-    /** @return the chunks of the defender contested by the attackers */
-    int getContestedChunks();
+    /** @return the lands of the defender contested by the attackers */
+    int getContestedLands();
 }

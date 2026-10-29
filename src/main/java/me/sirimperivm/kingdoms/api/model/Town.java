@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * A town of a kingdom: its territory is made of claims, each one a chunk. The view always shows the current state of
+ * A town of a kingdom: its territory is made of claims, each one a land. The view always shows the current state of
  * the town.
  */
 public interface Town {
@@ -38,9 +38,9 @@ public interface Town {
     /** @return the name of the town role of the member, null when the player is not a member */
     @Nullable String getRoleName(@NotNull UUID player);
 
-    @NotNull Collection<ChunkPosition> getClaims();
+    @NotNull Collection<LandPosition> getClaims();
 
-    boolean hasClaim(@NotNull ChunkPosition chunk);
+    boolean hasClaim(@NotNull LandPosition land);
 
     /** @return the money of the town (Vault economy) */
     double getBank();

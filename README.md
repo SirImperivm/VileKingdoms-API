@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly "com.github.SirImperivm:VileKingdoms-API:1.0.3"
+    compileOnly "com.github.SirImperivm:VileKingdoms-API:1.0.4"
 }
 ```
 

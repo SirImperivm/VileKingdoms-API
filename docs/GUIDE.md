@@ -1,9 +1,9 @@
 # VileKingdoms
 
-Version 1.0.3
+Version 1.0.4
 
 VileKingdoms turns the world of the server into a land of kingdoms fighting each other. The players found kingdoms
-and towns, claim the land chunk by chunk, build the structures that produce and keep the emeralds, grow their towns
+and towns, claim the world land by land, build the structures that produce and keep the emeralds, grow their towns
 through the ranks, make alliances and enmities, and conquer or destroy the towns of their enemies in timed wars.
 
 This guide explains how the plugin works, how to install and configure it, and every command, permission and
@@ -75,6 +75,10 @@ The data is saved in a SQLite database in the folder of the plugin, or in a MySQ
 `settings.yml`). When the plugin is updated, the new keys are added to the configuration files and the keys not used
 anymore are removed, keeping your values.
 
+Before founding the first town choose the size of the **lands** (see [Lands](#lands)): `lands.size` in
+`settings.yml`, or `/kingdom admin land-size <size>`, then restart the server. Once the first town is founded the
+size never changes.
+
 The towns work only when the default style (`structures.default-style`) has every structure type, at least at level 1:
 the town hall, the extractor, the collector, the residence and the depot. The structures included in the jar are
 extracted into the `structures` folder at the first start; the missing ones are built by the staff (see
@@ -87,8 +91,8 @@ missing ones.
 
 A **kingdom** is created with `/kingdom create`: its creator becomes its king. A kingdom has no land by itself: it is
 made of **towns**, founded by the king (or by the members whose role has the `found_towns` permission) with
-`/town found` in the chunk where they stand. The founder chooses the name and the style of the town: the town claims
-that chunk, its town hall is built there, and the founder becomes its mayor.
+`/town found` in the land where they stand. The founder chooses the name and the style of the town: the town claims
+that land, its town hall is built there, and the founder becomes its mayor.
 
 The players join a kingdom by joining one of its towns. A player can be a member of several towns, also of different
 kingdoms, as long as those kingdoms are not enemies: when two of their kingdoms become enemies, the player has
@@ -127,15 +131,27 @@ of the roles of `default-roles.yml`, then its leaders change them from the kingd
 A member can promote, demote, kick or ban only the members below them. The permissions of the roles are listed in
 [Role permissions](#7-role-permissions).
 
+### Lands
+
+The world is divided into **lands**: squares of `lands.size` x `lands.size` blocks (25 by default, from 16 to 64),
+aligned to the origin of the world, the same for every world. A land is the unit of the territory: each claim is a
+land, and each structure fills a land, so the size of the lands is also the largest size of a structure.
+
+The size is chosen once, before the towns exist: in `settings.yml` (`lands.size`) or with
+`/kingdom admin land-size <size>`, then the server must be restarted. When the first town is founded the size becomes
+definitive and is saved in `data.yml`: from then on `lands.size` is ignored, because the claims and the structures
+depend on it. `/kingdom admin land-size` shows the current size. A server with towns founded before VileKingdoms 1.0.4
+keeps lands of 16 blocks, the chunks of Minecraft, so its claims stay valid.
+
 ### Claims and the territory
 
-The land of a town is made of **claims**, one chunk each. A town claims only the free chunks touching its claims,
-at least `towns.claim-distance` chunks away from the towns of the other kingdoms, and up to the `max-claims` of its
+The territory of a town is made of **claims**, one land each. A town claims only the free lands touching its claims,
+at least `towns.claim-distance` lands away from the towns of the other kingdoms, and up to the `max-claims` of its
 rank. A claim cannot be released when it holds a structure, or when it is the only link between other claims and the
 town hall.
 
-- `/town claim` claims the chunk where the player stands, `/town claim auto` claims every free chunk they walk into.
-- `/town unclaim` releases the chunk where the player stands, `/town unclaim auto` every chunk of their town they walk
+- `/town claim` claims the land where the player stands, `/town claim auto` claims every free land they walk into.
+- `/town unclaim` releases the land where the player stands, `/town unclaim auto` every land of their town they walk
   into.
 - The automatic claim and release stop when the command is run again, after `claims.auto.duration-minutes`, when the
   player quits or loses the `manage_lands` permission, or when the other one starts. Their progress is shown in the
@@ -145,7 +161,7 @@ town hall.
 In the claims of a town, who is not a member cannot break or place blocks, open the containers, use doors, trapdoors
 and redstone components, pick up items or kill the animals and the neutral mobs (`protection.neutral-mobs`), unless the
 town gives the permission to the allies, the neutrals or the enemies (the outsiders button of the town hall). The
-members can do it only when their role has the permission. In the chunks with a structure nobody can break or place
+members can do it only when their role has the permission. In the lands with a structure nobody can break or place
 blocks, in peace and in war. The explosions break the blocks of the claims only when `protection.explosions` is true.
 
 The PvP in the territory of the towns is denied between players of different kingdoms; the members of the same kingdom
@@ -157,7 +173,7 @@ The staff with `vilekingdoms.admin.bypass` ignores the protection. The admin cla
 
 ### Structures
 
-The structures are the buildings of the towns. Each one fills a claimed chunk and has a level; its look comes from the
+The structures are the buildings of the towns. Each one fills a claimed land and has a level; its look comes from the
 **style** of the town, chosen at its foundation.
 
 | Structure | What it does |
@@ -169,9 +185,15 @@ The structures are the buildings of the towns. Each one fills a claimed chunk an
 | Depot | many containers, whose content counts in the worth of the town |
 
 The structures are bought from the shop of the town (`/town shop`, or the town hall), paid with the emeralds of the
-town, and given as an item: using the item in a claim of the town places the structure there, when no block of the
-world is in the way. Right clicking a placed structure opens its GUI, to upgrade it to the next level, to pick it up
-again as an item, or to buy its defenses. The structure items never drop on death, cannot be thrown and do not burn.
+town, and given as an item: using the item on a block of a claim of the town places the structure there, its floor
+in place of the clicked block, when no block of the world is in the way above the floor. Right clicking a placed
+structure opens its GUI, to upgrade it to the next level, to pick it up again as an item, or to buy its defenses. The
+structure items never drop on death, cannot be thrown and do not burn.
+
+Before a structure is placed, the plugin saves the terrain it takes (`terrain/` in the plugin folder): when the
+structure is removed (picked up, upgraded, or its town released or destroyed) the terrain is put back as it was. The
+structures placed before VileKingdoms 1.0.4 have no saved terrain: theirs is generated again by the generator of the
+world through FastAsyncWorldEdit or WorldEdit, or replaced by air without them.
 
 The rank of the town decides how many structures of each type work and up to which level. The structures placed over
 the limit are **in excess**: their extractors stop, their collectors do not count, their residences are not given to
@@ -187,8 +209,8 @@ A town has three values:
 
 - **Emeralds**: the emeralds kept by its collectors. Every `extractors.interval-minutes` each extractor produces
   `extractors.base-amount` emeralds, multiplied by the boost of its level and by the modifier of its biome
-  (`extractors.biomes`), sent to its collector. An extractor must stay at most `extractors.max-collector-distance-chunks`
-  chunks from its collector and at least `extractors.min-distance-chunks` chunks from the other extractors. The
+  (`extractors.biomes`), sent to its collector. An extractor must stay at most `extractors.max-collector-distance-lands`
+  lands from its collector and at least `extractors.min-distance-lands` lands from the other extractors. The
   emeralds pay the structures, their upgrades, the ranks and the defenses.
 - **Worth**: the value of the items in the containers of its claims (chests, barrels, hoppers, furnaces, shulker boxes
   and the others), also inside the structures. The emeralds are not counted. The prices are read from the first shop
@@ -241,14 +263,14 @@ The wars are fought between the towns of enemy kingdoms, only during the **perio
    `/town war declare <town> <stake>`, choosing the attack squad among the online members of their town. The chosen
    members join the squad with `/town war join` within `wars.squad-join-seconds`.
 2. **The war.** For `wars.duration-minutes` the banks of both towns are locked and the extractors of the defender
-   stop. When half of the squad stays in a chunk of the defender for `wars.capture-seconds`, the chunk becomes
-   **contested**. In the contested chunks the attackers steal the emeralds of the collectors (`wars.steal`), open the
+   stop. When half of the squad stays in a land of the defender for `wars.capture-seconds`, the land becomes
+   **contested**. In the contested lands the attackers steal the emeralds of the collectors (`wars.steal`), open the
    containers and take the items of the depots. The stolen emeralds are kept until the attacker deposits them in a
    collector of their kingdom or of an allied one: an attacker dying loses them.
-3. **The end.** The attacker wins by contesting every chunk of the defender, town hall included, before the end of the
+3. **The end.** The attacker wins by contesting every land of the defender, town hall included, before the end of the
    war; otherwise the defender wins. `/town war abandon` gives up the war, losing it.
 
-During a war the squad can break and place blocks and use doors in the chunks of the defender without structures, and
+During a war the squad can break and place blocks and use doors in the lands of the defender without structures, and
 pick up the items in its whole territory. The squad and the members of the defender can hit each other; the members
 of the attacker left out of the squad can neither hit nor be hit there.
 
@@ -262,7 +284,7 @@ to the money it has. The stake must stay within `wars.stake.min` and `wars.stake
 |---|---|
 | `CONQUEST` | the town joins the kingdom of the attacker; its members are kicked |
 | `TIMED_DESTRUCTION` | the town cannot be used until `wars.destruction-hours` pass |
-| `PERMANENT_DESTRUCTION` | the town is deleted; its chunks become free when `wars.griefable-ruins` is true, otherwise ruins nobody can edit |
+| `PERMANENT_DESTRUCTION` | the town is deleted; its lands become free when `wars.griefable-ruins` is true, otherwise ruins nobody can edit |
 
 **Who can be attacked.** A town cannot be attacked while it is in another war, during its immunity, when it is
 destroyed, without online members (unless its rank is at least `wars.offline-defenders-min-rank`; 0: never), or when its
@@ -280,7 +302,7 @@ the wars with `/town admin war`.
 ### Defenses
 
 A structure can have **defenders**: mobs that appear when an enemy (an attacker of a war against the town, or a player
-banned from it) walks into its chunk, and attack them. They disappear without drops when the enemy leaves.
+banned from it) walks into its land, and attack them. They disappear without drops when the enemy leaves.
 
 - The staff sets the spawn points of the defenders while building the schematic (`/structure defense add`).
 - The members with the `manage_structures` permission buy the defense levels from the GUI of the structure: the level
@@ -328,9 +350,10 @@ The schematics of the structures are saved in `structures/<style>/<type>/<level>
 `<level>.yml` next to them. A style can have any of them: when a style misses a structure, the one of the default
 style is used. The staff builds them in game, in an empty world (`structures.world`) created by the plugin.
 
-1. `/structure create <type> <style> <level>` sends you to an area of 16x16 blocks closed by walls. The line of
-   `structures.editor.ground-block` on the walls marks the ground: above it there are
-   `structures.editor.height` blocks, below it `structures.editor.underground-depth` blocks for an underground floor.
+1. `/structure create <type> <style> <level>` sends you to an area as large as a land, closed by walls. The line of
+   `structures.editor.ground-block` on the walls marks the **floor**: the layer of the structure placed on the surface
+   of the terrain, the block the players stand on. From the floor up there are `structures.editor.height` blocks,
+   below it `structures.editor.underground-depth` blocks for an underground floor.
    Everyone in the area can build in it and use the editing commands, which act on its structure; nobody can break or
    place blocks outside the areas, nor break the walls.
 2. Build the structure, and set its points where you stand:
@@ -343,12 +366,14 @@ style is used. The staff builds them in game, in an empty world (`structures.wor
    `/kingdom admin setspawn`; `/structure cancel` sends you back without saving.
 
 When the structure is saved its faces are projected: from the four sides, from the bottom and from the top down to the
-ground, the air is skipped until a block. That outer air is never pasted, so the terrain stays around the structure;
-the inner air is pasted, digging the underground floors.
+floor, the air is skipped until a block. That outer air is never pasted, so the terrain stays around the structure;
+the inner air is pasted, digging the underground floors. The air of the floor open to the sky keeps the terrain, unless
+an underground floor is below it.
 
 `/structure edit` opens a saved structure again, `/structure info` shows its size, points and properties,
 `/structure delete` deletes it and `/structure give` gives its item, for the tests. The structures are placed with the
-corner of the schematic on the corner of the chunk.
+corner of the schematic on the corner of the land, and their floor on the surface of the terrain: the town hall in
+place of the block the founder stands on, the others in place of the block clicked with their item.
 
 ## 5. Commands
 
@@ -392,6 +417,7 @@ Aliases of `/kingdom`: `/kingdoms`, `/king`.
 | `/kingdom admin destroy <kingdom> [confirm]` | Destroys a kingdom, releasing its towns. | `vilekingdoms.admin.destroy` |
 | `/kingdom admin transfer <kingdom> <player>` | Gives the crown of a kingdom to a player. | `vilekingdoms.admin.transfer` |
 | `/kingdom admin setspawn` | Sets where the staff goes back after building a structure. | `vilekingdoms.admin.setspawn` |
+| `/kingdom admin land-size [size]` | Shows the side of the lands, or chooses it until the first town is founded. | `vilekingdoms.admin.land-size` |
 | `/kingdom admin reload` | Reloads the plugin. | `vilekingdoms.admin.reload` |
 
 ### Town commands
@@ -402,7 +428,7 @@ Aliases of `/town`: `/towns`, `/t`.
 |---|---|---|---|
 | `/town help [page]` | Shows the town commands you can use. | `vilekingdoms.town.help` |  |
 | `/town manage <town>` | Chooses the town the /town commands act on. | `vilekingdoms.town.manage` |  |
-| `/town found [name] [style]` | Founds a town in the chunk you are in. | `vilekingdoms.town.found` | `found_towns` (global role) |
+| `/town found [name] [style]` | Founds a town in the land you are in. | `vilekingdoms.town.found` | `found_towns` (global role) |
 | `/town hall [town]` | Opens the management GUI of the town. | `vilekingdoms.town.hall` | `open_hall` |
 | `/town reach [town]` | Teleports to the spawn of the town hall. | `vilekingdoms.town.reach` | `teleport` |
 | `/town capital` | Teleports to the capital of your kingdom. | `vilekingdoms.town.capital` | `teleport` |
@@ -410,8 +436,8 @@ Aliases of `/town`: `/towns`, `/t`.
 | `/town stats [town]` | Shows the leaders, the members and the bank of a town. Alias: `/town info`. | `vilekingdoms.town.stats` |  |
 | `/town rankup [town]` | Brings the town to the next rank. | `vilekingdoms.town.rankup` | `rankup` |
 | `/town shop [town]` | Opens the shop of the structures. | `vilekingdoms.town.shop` | `manage_structures` |
-| `/town claim [one\|auto] [town]` | Claims the chunk you are in, or with auto the chunks you walk into. | `vilekingdoms.town.claim` | `manage_lands` |
-| `/town unclaim [one\|auto] [town]` | Releases the chunk you are in, or with auto the chunks you walk into. | `vilekingdoms.town.unclaim` | `manage_lands` |
+| `/town claim [one\|auto] [town]` | Claims the land you are in, or with auto the lands you walk into. | `vilekingdoms.town.claim` | `manage_lands` |
+| `/town unclaim [one\|auto] [town]` | Releases the land you are in, or with auto the lands you walk into. | `vilekingdoms.town.unclaim` | `manage_lands` |
 | `/town map` | Shows the claims around you. | `vilekingdoms.town.map` |  |
 | `/town privacy <public\|private\|party> [town]` | Changes how the players join the town. | `vilekingdoms.town.privacy` | `manage_town` |
 | `/town join <town>` | Joins a town, by its access mode. | `vilekingdoms.town.join` |  |
@@ -443,8 +469,8 @@ Aliases of `/town`: `/towns`, `/t`.
 | `/town admin hall <town>` | Opens the town hall of a town: every action is forced and free. | `vilekingdoms.admin.town` |
 | `/town admin member add <player> <town> [role]` | Adds a player to a town, without invite. | `vilekingdoms.admin.member.add` |
 | `/town admin member remove <player> <town>` | Removes a player from a town. | `vilekingdoms.admin.member.remove` |
-| `/town admin claim-for <town> [one\|auto]` | Claims the chunk you are in, or with auto the chunks you walk into, for a town. | `vilekingdoms.admin.claim` |
-| `/town admin release [one\|auto]` | Releases the chunk you are in, or with auto the chunks you walk into, of any town. | `vilekingdoms.admin.release` |
+| `/town admin claim-for <town> [one\|auto]` | Claims the land you are in, or with auto the lands you walk into, for a town. | `vilekingdoms.admin.claim` |
+| `/town admin release [one\|auto]` | Releases the land you are in, or with auto the lands you walk into, of any town. | `vilekingdoms.admin.release` |
 | `/town admin release-all-for <town> [confirm]` | Releases all the claims of a town but the town hall one. | `vilekingdoms.admin.release` |
 | `/town admin tax set <town> <amount> <days>` | Sets the tax of a town. | `vilekingdoms.admin.town` |
 | `/town admin tax unset <town>` | Removes the tax of a town. | `vilekingdoms.admin.town` |
@@ -460,7 +486,7 @@ Aliases of `/structure`: `/structures`.
 | Command | Description | Permission |
 |---|---|---|
 | `/structure help` | Shows the commands of the structures. | `vilekingdoms.admin.structure` |
-| `/structure create <type> <style> <level>` | Sends you to an area of 16x16 blocks closed by walls to build a structure, with an underground floor below the red line. | `vilekingdoms.admin.structure` |
+| `/structure create <type> <style> <level>` | Sends you to an area as large as a land, closed by walls, to build a structure, with the floor on the red line and an underground floor below it. | `vilekingdoms.admin.structure` |
 | `/structure edit <type> <style> <level>` | Opens a saved structure to modify it. | `vilekingdoms.admin.structure` |
 | `/structure spawn set` | Sets the spawn point of the town in the town hall, where you are. | `vilekingdoms.admin.structure` |
 | `/structure defense add [max-level] \| remove` | Adds a spawn point of the defenses where you are, with the highest defense level, or removes the nearest one. | `vilekingdoms.admin.structure` |
@@ -551,6 +577,7 @@ Gives every admin command of the kingdoms and of the towns, and the user ones. G
 | `vilekingdoms.admin.claim` | `/town admin claim-for` |
 | `vilekingdoms.admin.destroy` | `/kingdom admin destroy` |
 | `vilekingdoms.admin.help` | `/kingdom admin help`, `/town admin help` |
+| `vilekingdoms.admin.land-size` | `/kingdom admin land-size` |
 | `vilekingdoms.admin.member.add` | `/town admin member add` |
 | `vilekingdoms.admin.member.remove` | `/town admin member remove` |
 | `vilekingdoms.admin.release` | `/town admin release`, `/town admin release-all-for` |
@@ -583,7 +610,7 @@ server: a player must have both the permission of the command and the role permi
 | `manage_town` | town | the town roles, the permissions of the outsiders and the access mode |
 | `manage_members` | town | promoting, demoting, kicking, banning and unbanning the members |
 | `manage_invites` | town | inviting the players and cancelling the invites |
-| `manage_lands` | town | claiming and releasing the chunks |
+| `manage_lands` | town | claiming and releasing the lands |
 | `manage_structures` | town | buying, placing, upgrading and picking up the structures, and their defenses |
 | `rankup` | town | bringing the town to the next rank |
 | `manage_economy` | town | depositing and withdrawing money from the bank |
@@ -649,9 +676,9 @@ With WorldGuard installed the plugin registers these state flags, all allowed by
 |---|---|
 | `kingdoms-enabled` | no `/kingdom` and `/town` command works for the players in the region |
 | `towns-enabled` | no `/town` command works for the players in the region |
-| `town-claims-enabled` | the chunks touching the region, even in part, cannot be claimed nor released; the automatic claim and release stop entering them |
+| `town-claims-enabled` | the lands touching the region, even in part, cannot be claimed nor released; the automatic claim and release stop entering them |
 
-The admin commands (`/kingdom admin`, `/town admin`) and the console are never blocked. A chunk is also refused when a
+The admin commands (`/kingdom admin`, `/town admin`) and the console are never blocked. A land is also refused when a
 region touching it denies `kingdoms-enabled` or `towns-enabled`, and the global region (`__global__`) counts too. For
 example, to keep the towns out of the spawn:
 
@@ -694,7 +721,8 @@ material, custom item plugin missing) is replaced with `default-error-item`.
 
 The heavy work runs in background or a little per tick: `thread-pool-size` sets the threads of the plugin,
 `workload.max-millis-per-tick` the milliseconds per tick spent pasting and clearing the structures, and
-`worth.chunks-per-tick` the chunks read per tick while updating the worth.
+`worth.lands-per-tick` the lands read per tick while updating the worth (a land is read when every chunk of
+Minecraft it touches is loaded).
 
 ### Default files
 
@@ -738,14 +766,22 @@ kingdoms:
     pattern: "[A-Za-z0-9_]+"
     max-length: 25
 
-# Towns of the kingdoms. A kingdom is made of towns: each town controls a territory of claims (chunks), all touching
+# Lands: the unit of the claims of the towns, squares of size x size blocks aligned to the origin of the world. Each
+# structure fills a land, so the side is also the largest side of a structure. From 16 to 64.
+# The side becomes definitive when the first town is founded, because the claims and the structures depend on it: from
+# then on this value is ignored. Until then it can be changed here or with /kingdom admin land-size, then the server
+# must be restarted. The servers with towns from before VileKingdoms 1.0.4 keep lands of 16 blocks.
+lands:
+  size: 25
+
+# Towns of the kingdoms. A kingdom is made of towns: each town controls a territory of claims (lands), all touching
 # each other, and has its own emeralds (kept by its collectors), worth (value of its containers) and bank (Vault).
 # The values of a kingdom are the sum of the ones of its towns.
 towns:
   name:
     pattern: "[A-Za-z0-9_]+"
     max-length: 25
-  claim-distance: 3 # Chunks that must stay between a claim and the claims of the towns of other kingdoms.
+  claim-distance: 3 # Lands that must stay between a claim and the claims of the towns of other kingdoms.
   capital-cooldown-seconds: 86400 # Seconds between two changes of the capital (/town capital set).
   enemy-conflict-hours: 24 # Hours given to a member of towns of two kingdoms becoming enemies to leave one: then they leave the newest one.
   invite-expiration-seconds: 300 # Seconds before an invite to a town expires.
@@ -758,7 +794,7 @@ teleports:
 
 # Territory of the towns: who is not a member cannot break or place blocks, open containers, doors and trapdoors, use
 # redstone components, pick up items or kill the animals, unless the town allows it to the allies, the neutrals or the
-# enemies. In the chunks with a structure nobody can break or place blocks, in peace and in war.
+# enemies. In the lands with a structure nobody can break or place blocks, in peace and in war.
 protection:
   # Hostile mobs protected like the animals: only the members with the kill_animals permission can kill them.
   neutral-mobs:
@@ -783,7 +819,7 @@ worth:
   # otherwise the internal list), SHOPGUIPLUS, ECONOMYSHOPGUI, ZSHOP, CMI, ESSENTIALS or INTERNAL.
   provider: AUTO
   update-minutes: 10 # Minutes between two updates of the worth of every town.
-  chunks-per-tick: 4 # Loaded chunks read in each tick while updating the worth.
+  lands-per-tick: 4 # Loaded lands read in each tick while updating the worth.
   # Internal price of one item of each material (used by the INTERNAL provider and when the shops have no price).
   prices:
     DIAMOND: 100
@@ -808,8 +844,8 @@ taxes:
 extractors:
   interval-minutes: 10
   base-amount: 5
-  min-distance-chunks: 3 # Chunks that must stay between two extractors.
-  max-collector-distance-chunks: 8 # Farthest distance from the collector: farther, the extractor stops.
+  min-distance-lands: 3 # Lands that must stay between two extractors.
+  max-collector-distance-lands: 8 # Farthest distance from the collector: farther, the extractor stops.
   biomes: # Modifiers of the production by biome (e.g. DESERT, OCEAN, PLAINS): the other biomes use 1.0.
     bonus:
       BADLANDS: 1.5
@@ -826,7 +862,7 @@ wars:
   # kicked), TIMED_DESTRUCTION (unusable until destruction-hours pass) or PERMANENT_DESTRUCTION (deleted).
   conquest: CONQUEST
   destruction-hours: 72
-  griefable-ruins: false # PERMANENT_DESTRUCTION: whether the chunks of the deleted town become free, otherwise ruins nobody can edit.
+  griefable-ruins: false # PERMANENT_DESTRUCTION: whether the lands of the deleted town become free, otherwise ruins nobody can edit.
   peace-days: 6
   war-days: 1
   duration-minutes: 60 # Duration of a war.
@@ -841,9 +877,9 @@ wars:
   stake:
     min: 100
     max: 100000
-  capture-seconds: 60 # Seconds half of the squad must stay in a chunk to make it contested.
+  capture-seconds: 60 # Seconds half of the squad must stay in a land to make it contested.
   squad-join-seconds: 120 # Seconds the members of the attacker have to join the squad.
-  steal: # Emeralds stolen from a collector of a contested chunk.
+  steal: # Emeralds stolen from a collector of a contested land.
     interval-seconds: 5
     amount: 10
 
@@ -862,12 +898,15 @@ party:
 structures:
   default-style: "default" # Style used when a style misses a structure: the towns work only when it has every structure.
   world: "vk_structures" # Empty world where the staff builds the structures.
-  # Areas of 16x16 blocks closed by walls where the staff builds: a line of ground-block on the walls marks the ground
-  # (y 65), below it the structures can have underground floors. When saved, the air reached from the sides, from the
-  # bottom and from the top down to the ground is not pasted: the inner air is, digging the underground floors.
+  # Areas as large as a land, closed by walls, where the staff builds: a line of ground-block on the walls marks the floor
+  # (y 65), the layer of the structure placed on the surface of the terrain, where the players stand. Below it the
+  # structures can have underground floors. When saved, the air reached from the sides, from the bottom and from the
+  # top down to the floor is not pasted: the inner air is, digging the underground floors.
+  # When a structure is removed, the terrain saved before placing it is put back (the structures placed before 1.0.4
+  # get the terrain generated again by FastAsyncWorldEdit or WorldEdit, or air without them).
   editor:
-    underground-depth: 16 # Blocks below the ground for the underground floors (0 for none).
-    height: 64 # Blocks above the ground.
+    underground-depth: 16 # Blocks below the floor for the underground floors (0 for none).
+    height: 64 # Blocks from the floor up, the floor included.
     wall-block: "minecraft:glass"
     ground-block: "minecraft:red_concrete"
 
@@ -910,14 +949,14 @@ relations:
     enemy: "&c"
   request-expiration-hours: 168 # Hours before a relation request without answer expires (168 = 7 days). 0: never.
 
-# Lands of the towns: each claim is a chunk. A town claims only the free chunks touching its claims, and releases only
-# its own ones. The automatic claim (/town claim auto) claims the free chunks the player walks into, the automatic
-# release (/town unclaim auto) releases the chunks of their town. Both stop when the command is run again, when the
+# Claims of the towns: each claim is a land. A town claims only the free lands touching its claims, and releases only
+# its own ones. The automatic claim (/town claim auto) claims the free lands the player walks into, the automatic
+# release (/town unclaim auto) releases the lands of their town. Both stop when the command is run again, when the
 # duration ends, when the player quits or loses the manage_lands permission, or when the other one is started.
 claims:
   auto:
     duration-minutes: 5 # Minutes before the automatic claim and release stop by themselves. 0: until stopped.
-    action-bar: true # Whether the progress (chunks and time left) is shown in the action bar.
+    action-bar: true # Whether the progress (lands and time left) is shown in the action bar.
 
 # Chat formatted by the plugin. Each player receiving a message sees the kingdom of the sender with the color of
 # the relation between their kingdoms.
