@@ -28,6 +28,9 @@ public interface Structure {
     /** @return the lowest corner of the structure at the ground, null when its world is not loaded */
     @Nullable Location getLocation();
 
-    /** @return the emeralds kept by a collector, 0 for the other structures */
+    /** @return the emeralds of the town for the town hall, 0 for the other structures */
     double getEmeralds();
+
+    /** @return the collector an extractor is linked to, null when it is not linked and for the other structures */
+    @Nullable Structure getLinkedCollector();
 }

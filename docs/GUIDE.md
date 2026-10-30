@@ -1,6 +1,6 @@
 # VileKingdoms
 
-Version 1.0.4
+Version 1.0.5
 
 VileKingdoms turns the world of the server into a land of kingdoms fighting each other. The players found kingdoms
 and towns, claim the world land by land, build the structures that produce and keep the emeralds, grow their towns
@@ -133,7 +133,7 @@ A member can promote, demote, kick or ban only the members below them. The permi
 
 ### Lands
 
-The world is divided into **lands**: squares of `lands.size` x `lands.size` blocks (25 by default, from 16 to 64),
+The world is divided into **lands**: squares of `lands.size` x `lands.size` blocks (24 by default, a multiple of 8 from 16 to 64),
 aligned to the origin of the world, the same for every world. A land is the unit of the territory: each claim is a
 land, and each structure fills a land, so the size of the lands is also the largest size of a structure.
 
@@ -178,9 +178,9 @@ The structures are the buildings of the towns. Each one fills a claimed land and
 
 | Structure | What it does |
 |---|---|
-| Town hall | the heart of the town, built at its foundation: right clicking it opens the town hall GUI, and it holds the spawn of the town. Its level is the rank of the town |
-| Extractor | produces emeralds, sent to its collector |
-| Collector | keeps the emeralds of the town, up to its capacity |
+| Town hall | the heart of the town, built at its foundation: right clicking it opens the town hall GUI, it holds the spawn of the town and keeps its emeralds. Its level is the rank of the town |
+| Extractor | produces emeralds for the town hall |
+| Collector | raises the limit of the emeralds of the town |
 | Residence | gives seats to the members: each member gets a seat in a residence |
 | Depot | many containers, whose content counts in the worth of the town |
 
@@ -196,22 +196,36 @@ structures placed before VileKingdoms 1.0.4 have no saved terrain: theirs is gen
 world through FastAsyncWorldEdit or WorldEdit, or replaced by air without them.
 
 The rank of the town decides how many structures of each type work and up to which level. The structures placed over
-the limit are **in excess**: their extractors stop, their collectors do not count, their residences are not given to
+the limit are **in excess**: their extractors stop, their collectors do not raise the limit, their residences are not given to
 the new members and their depots cannot be used. A structure of a level higher than the rank allows works as the
 highest level allowed.
 
-The properties of each level (cost, extractor boost, collector capacity, residence seats, defender NPCs) are written in
+The properties of each level (cost, extractor boost, capacity of the town hall and of the collector, residence seats, defender NPCs) are written in
 `structures.yml`, and can be changed for a single schematic with `/structure set`.
 
 ### Emeralds, worth and bank
 
 A town has three values:
 
-- **Emeralds**: the emeralds kept by its collectors. Every `extractors.interval-minutes` each extractor produces
-  `extractors.base-amount` emeralds, multiplied by the boost of its level and by the modifier of its biome
-  (`extractors.biomes`), sent to its collector. An extractor must stay at most `extractors.max-collector-distance-lands`
-  lands from its collector and at least `extractors.min-distance-lands` lands from the other extractors. The
-  emeralds pay the structures, their upgrades, the ranks and the defenses.
+- **Emeralds**: the treasury of the town, kept by its town hall. A new town starts with `towns.starting-emeralds`, to
+  buy its first structures. The emeralds pay the structures, their upgrades, the ranks and the defenses. Every
+  `extractors.interval-minutes` each extractor produces `extractors.base-amount` emeralds, multiplied by the boost of
+  its level and by the modifier of its biome (`extractors.biomes`), sent to the town hall. An extractor stays at least
+  `extractors.min-distance-lands` lands from the other extractors.
+
+  The town hall has a limit for each level (`capacity` in `structures.yml`), and each working collector raises the
+  limit of the town by its own `capacity`. An extractor without a collector stops at the limit of the town hall alone;
+  an extractor linked to a collector goes on up to the limit of the town. To link an extractor press **Link to a
+  collector** in its GUI, then within `extractors.link-seconds` shift + right click the collector: of the same town, at
+  most `extractors.max-collector-distance-lands` lands away, with less than two extractors already linked. Picking up
+  the collector removes its links. The GUI of an extractor shows whether it is linked, the one of a collector whether
+  it is operational.
+
+  Real emeralds become emeralds of the town with `/town converter`, on the town the commands act on, for who has the
+  `deposit_emeralds` permission. In its GUI place emeralds and emerald blocks, then press **Convert**: each emerald
+  gives `converter.rate` emeralds of the town, each block nine times as many. Only what fits within the limit of the
+  town is converted, and whatever is left goes back to the player when the GUI closes. Renamed emeralds and custom items
+  are not accepted, and the converter does not work during a war of the town. `converter.rate: 0` disables it.
 - **Worth**: the value of the items in the containers of its claims (chests, barrels, hoppers, furnaces, shulker boxes
   and the others), also inside the structures. The emeralds are not counted. The prices are read from the first shop
   plugin installed, otherwise from `worth.prices`; the worth is updated every `worth.update-minutes`.
@@ -264,9 +278,10 @@ The wars are fought between the towns of enemy kingdoms, only during the **perio
    members join the squad with `/town war join` within `wars.squad-join-seconds`.
 2. **The war.** For `wars.duration-minutes` the banks of both towns are locked and the extractors of the defender
    stop. When half of the squad stays in a land of the defender for `wars.capture-seconds`, the land becomes
-   **contested**. In the contested lands the attackers steal the emeralds of the collectors (`wars.steal`), open the
-   containers and take the items of the depots. The stolen emeralds are kept until the attacker deposits them in a
-   collector of their kingdom or of an allied one: an attacker dying loses them.
+   **contested**. In the contested lands the attackers open the containers and take the items of the depots; when the
+   land of the town hall is contested they steal the emeralds of the town by right clicking it (`wars.steal`). The
+   stolen emeralds are kept until the attacker deposits them by right clicking a town hall of their kingdom or of an
+   allied one: an attacker dying loses them.
 3. **The end.** The attacker wins by contesting every land of the defender, town hall included, before the end of the
    war; otherwise the defender wins. `/town war abandon` gives up the war, losing it.
 
@@ -330,8 +345,10 @@ For the players:
 - Stand where you want your first town and run `/town found <name>`: choose the style, and the town hall appears.
 - `/town hall` (or right clicking the town hall) opens the management of the town: shop, members, roles, access mode.
 - Claim the land around the town hall with `/town claim auto`, walking around.
-- Buy a collector, an extractor and a residence from the shop and place them in your claims: the extractor starts
-  producing emeralds into the collector.
+- Buy an extractor, a collector and a residence from the shop with the starting emeralds of the town, and place them
+  in your claims: the extractor starts producing emeralds for the town hall.
+- Open the GUI of the extractor, press **Link to a collector** and shift + right click the collector: the extractor can
+  now fill the higher limit.
 - Invite your friends with `/town invite <player>`, or open the town with `/town privacy public`.
 - Fill the containers of your claims to raise the worth, then `/town rankup` to unlock more claims and structures.
 - Make allies with `/kingdom relation ally <kingdom>`, enemies with `/kingdom relation enemy <kingdom>`, and during a
@@ -436,6 +453,7 @@ Aliases of `/town`: `/towns`, `/t`.
 | `/town stats [town]` | Shows the leaders, the members and the bank of a town. Alias: `/town info`. | `vilekingdoms.town.stats` |  |
 | `/town rankup [town]` | Brings the town to the next rank. | `vilekingdoms.town.rankup` | `rankup` |
 | `/town shop [town]` | Opens the shop of the structures. | `vilekingdoms.town.shop` | `manage_structures` |
+| `/town converter` | Opens the GUI converting real emeralds into emeralds of the town. | `vilekingdoms.town.converter` | `deposit_emeralds` |
 | `/town claim [one\|auto] [town]` | Claims the land you are in, or with auto the lands you walk into. | `vilekingdoms.town.claim` | `manage_lands` |
 | `/town unclaim [one\|auto] [town]` | Releases the land you are in, or with auto the lands you walk into. | `vilekingdoms.town.unclaim` | `manage_lands` |
 | `/town map` | Shows the claims around you. | `vilekingdoms.town.map` |  |
@@ -544,6 +562,7 @@ Gives every user command of the kingdoms and of the towns. Given by default to e
 | `vilekingdoms.town.chat` | `/town chat` |
 | `vilekingdoms.town.claim` | `/town claim` |
 | `vilekingdoms.town.decline` | `/town decline` |
+| `vilekingdoms.town.converter` | `/town converter` |
 | `vilekingdoms.town.demote` | `/town demote` |
 | `vilekingdoms.town.found` | `/town found` |
 | `vilekingdoms.town.hall` | `/town hall` |
@@ -616,7 +635,7 @@ server: a player must have both the permission of the command and the role permi
 | `manage_economy` | town | depositing and withdrawing money from the bank |
 | `manage_taxes` | town | setting the taxes; it also exempts from them |
 | `manage_wars` | town | declaring and abandoning the wars |
-| `deposit_emeralds` | town | depositing the emeralds stolen in a war in the collectors |
+| `deposit_emeralds` | town | depositing the emeralds stolen in a war in the town hall, and converting real emeralds with `/town converter` |
 | `teleport` | town | `/town reach` and `/town capital` |
 | `release_town` | town | releasing the town |
 | `build` | territory | breaking and placing blocks |
@@ -656,6 +675,7 @@ kingdom of the player, the town placeholders the town they manage; they are empt
 | `%vk_town_max_claims%` | claims allowed by the rank |
 | `%vk_town_bank%` | bank of the town (compact) |
 | `%vk_town_emeralds%` | emeralds of the town (compact) |
+| `%vk_town_max_emeralds%` | limit of the emeralds of the town (compact) |
 | `%vk_town_worth%` | worth of the town (compact) |
 | `%vk_town_tax%` | tax of the town |
 | `%vk_town_immunity%` | time left of the immunity, empty when not immune |
@@ -767,20 +787,22 @@ kingdoms:
     max-length: 25
 
 # Lands: the unit of the claims of the towns, squares of size x size blocks aligned to the origin of the world. Each
-# structure fills a land, so the side is also the largest side of a structure. From 16 to 64.
+# structure fills a land, so the side is also the largest side of a structure. A multiple of 8 from 16 to 64: any other
+# value becomes the valid one just below it.
 # The side becomes definitive when the first town is founded, because the claims and the structures depend on it: from
 # then on this value is ignored. Until then it can be changed here or with /kingdom admin land-size, then the server
 # must be restarted. The servers with towns from before VileKingdoms 1.0.4 keep lands of 16 blocks.
 lands:
-  size: 25
+  size: 24
 
 # Towns of the kingdoms. A kingdom is made of towns: each town controls a territory of claims (lands), all touching
-# each other, and has its own emeralds (kept by its collectors), worth (value of its containers) and bank (Vault).
+# each other, and has its own emeralds (kept by its town hall), worth (value of its containers) and bank (Vault).
 # The values of a kingdom are the sum of the ones of its towns.
 towns:
   name:
     pattern: "[A-Za-z0-9_]+"
     max-length: 25
+  starting-emeralds: 300 # Emeralds a new town has in its town hall, to buy its first structures.
   claim-distance: 3 # Lands that must stay between a claim and the claims of the towns of other kingdoms.
   capital-cooldown-seconds: 86400 # Seconds between two changes of the capital (/town capital set).
   enemy-conflict-hours: 24 # Hours given to a member of towns of two kingdoms becoming enemies to leave one: then they leave the newest one.
@@ -839,13 +861,20 @@ taxes:
   enabled: true # When false nobody pays the taxes.
   grace-days: 3
 
-# Emerald extractors: every interval each extractor produces base-amount x level boost x biome modifier emeralds,
-# sent to its collector.
+# Converter of the emeralds (/town converter): real emeralds and emerald blocks become emeralds of the town, within its
+# limit. Only for who has the deposit_emeralds permission, never during a war of the town.
+converter:
+  rate: 1 # Emeralds of the town for each real emerald; a block counts as 9 emeralds. 0 disables the converter.
+
+# Emerald extractors: every interval each extractor produces base-amount x level boost x biome modifier emeralds, sent
+# to the town hall. An extractor without a collector stops at the limit of the town hall; linked to a collector (button
+# of its GUI, then shift + right click on the collector) it goes on up to the limit of the town, raised by the collectors.
 extractors:
   interval-minutes: 10
   base-amount: 5
   min-distance-lands: 3 # Lands that must stay between two extractors.
-  max-collector-distance-lands: 8 # Farthest distance from the collector: farther, the extractor stops.
+  max-collector-distance-lands: 8 # Farthest distance from the collector: farther, the extractor is unlinked.
+  link-seconds: 30 # Seconds to click the collector after pressing the link button of the extractor.
   biomes: # Modifiers of the production by biome (e.g. DESERT, OCEAN, PLAINS): the other biomes use 1.0.
     bonus:
       BADLANDS: 1.5
@@ -879,7 +908,7 @@ wars:
     max: 100000
   capture-seconds: 60 # Seconds half of the squad must stay in a land to make it contested.
   squad-join-seconds: 120 # Seconds the members of the attacker have to join the squad.
-  steal: # Emeralds stolen from a collector of a contested land.
+  steal: # Emeralds stolen from the town hall, when its land is contested.
     interval-seconds: 5
     amount: 10
 
@@ -1065,14 +1094,21 @@ rank-loss:
 # these ones. The structures are paid with the emeralds of the town.
 #   cost      emeralds paid for level 1 in the shop, or to upgrade to the level
 #   boost     multiplier of the production of an extractor
-#   capacity  emeralds kept by a collector
+#   capacity  limit of the emeralds of the town hall; for a collector, how much it raises the limit of its town
 #   seats     members living in a residence
-#   npcs      defenders appearing when an enemy enters the chunk of a defended structure
+#   npcs      defenders appearing when an enemy enters the land of a defended structure
 structures:
   town-hall:
     levels:
       1:
         cost: 0
+        capacity: 1000
+      2:
+        cost: 0
+        capacity: 3000
+      3:
+        cost: 0
+        capacity: 8000
   extractor:
     levels:
       1:
@@ -1131,7 +1167,6 @@ items:
     display-name: "t[structure-translation.item.display-name]"
     description:
       - "t[structure-translation.item.description]"
-      - "t[structure-translation.item.emeralds]"
   residence:
     material: RED_BED
     display-name: "t[structure-translation.item.display-name]"

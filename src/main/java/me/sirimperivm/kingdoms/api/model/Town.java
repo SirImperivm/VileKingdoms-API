@@ -45,8 +45,11 @@ public interface Town {
     /** @return the money of the town (Vault economy) */
     double getBank();
 
-    /** @return the emeralds kept by the collectors of the town */
+    /** @return the emeralds of the town, kept by its town hall */
     double getEmeralds();
+
+    /** @return the limit of the emeralds of the town: the one of its town hall, plus the capacity of its working collectors */
+    double getEmeraldCapacity();
 
     /** @return the value of the items in the containers of the claims, updated at regular intervals */
     double getWorth();

@@ -1,6 +1,6 @@
 # VileKingdoms API
 
-Version 1.0.4
+Version 1.0.5
 
 The API of VileKingdoms lets the addons read the kingdoms, the towns, the structures and the wars of the server, and
 react to everything that happens to them through Bukkit events. Most actions have an event called **before**, that
@@ -27,7 +27,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly "com.github.SirImperivm:VileKingdoms-API:1.0.4"
+    compileOnly "com.github.SirImperivm:VileKingdoms-API:1.0.5"
 }
 ```
 
@@ -44,7 +44,7 @@ dependencies {
 <dependency>
     <groupId>com.github.SirImperivm</groupId>
     <artifactId>VileKingdoms-API</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.5</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -124,13 +124,14 @@ The lookups return an `Optional`, empty when the object does not exist.
 ### Town
 
 `getId()`, `getName()`, `getDisplayName()`, `getKingdom()`, `getRank()`, `getStyle()`, `getMembers()`,
-`isMember(UUID)`, `getRoleName(UUID)`, `getClaims()`, `hasClaim(LandPosition)`, `getBank()`, `getEmeralds()`,
-`getWorth()`, `getImmuneUntil()`, `isDestroyed()`, `getStructures()`, `getSpawn()`.
+`isMember(UUID)`, `getRoleName(UUID)`, `getClaims()`, `hasClaim(LandPosition)`, `getBank()`, `getEmeralds()` (kept by
+the town hall), `getEmeraldCapacity()`, `getWorth()`, `getImmuneUntil()`, `isDestroyed()`, `getStructures()`, `getSpawn()`.
 
 ### Structure
 
 `getId()`, `getType()`, `getStyle()`, `getLevel()`, `getDefenseLevel()`, `getTown()`, `getLocation()`,
-`getEmeralds()`.
+`getEmeralds()` (the emeralds of the town for the town hall, 0 for the others), `getLinkedCollector()` (of an extractor,
+null when it is not linked).
 
 ### War
 
@@ -196,12 +197,14 @@ town call a `TownMemberLeaveEvent`.
 |---|---|---|---|
 | `TownCapitalChangeEvent` | no | Called when the king has chosen a new capital. | `getKingdom()` Kingdom: the kingdom<br>`getOldCapital()` Town: the capital it had<br>`getNewCapital()` Town: the new capital |
 | `TownClaimEvent` | no | Called when a land has been claimed for a town. | `getTown()` Town: the town<br>`getLand()` LandPosition: the land<br>`getPlayer()` Player: who claimed it |
+| `TownEmeraldConvertEvent` | no | Called when real emeralds have been converted into emeralds of a town. | `getTown()` Town: the town<br>`getPlayer()` Player: the player who made the action<br>`getAmount()` double: the emeralds the town received |
 | `TownFoundEvent` | no | Called when a town has been founded. | `getTown()` Town: the new town<br>`getFounder()` Player: its first leader |
 | `TownKingdomChangeEvent` | no | Called when a town now belongs to another kingdom, conquered in a war. | `getTown()` Town: the town<br>`getOldKingdomId()` UUID: the kingdom it belonged to<br>`getNewKingdom()` Kingdom: its new kingdom |
 | `TownMemberJoinEvent` | no | Called when a player has joined a town. | `getTown()` Town: the town<br>`getMember()` UUID: the new member |
 | `TownMemberLeaveEvent` | no | Called when a player is not a member of a town anymore. | `getTown()` Town: the town<br>`getMember()` UUID: the former member<br>`getReason()` LeaveReason: why |
 | `TownMemberPreJoinEvent` | yes | Called before a player joins a town. | `getTown()` Town: the town<br>`getPlayer()` Player: the player joining it |
 | `TownPreClaimEvent` | yes | Called before a land is claimed for a town, by a member or by an admin. | `getTown()` Town: the town<br>`getLand()` LandPosition: the land<br>`getPlayer()` Player: who claims it |
+| `TownPreEmeraldConvertEvent` | yes | Called before real emeralds are converted into emeralds of a town. | `getTown()` Town: the town<br>`getPlayer()` Player: the player making the action<br>`getAmount()` double: the emeralds the town receives |
 | `TownPreFoundEvent` | yes | Called before a player founds a town for their kingdom. | `getFounder()` Player: the founder, its first leader<br>`getKingdom()` Kingdom: the kingdom of the town<br>`getDisplayName()` String: the display name chosen<br>`getLand()` LandPosition: the land of the town hall |
 | `TownPreRankUpEvent` | yes | Called before a town reaches the next rank. | `getTown()` Town: the town<br>`getPlayer()` Player: the player making the action<br>`getNewRank()` int: the rank it reaches |
 | `TownPreReleaseEvent` | yes | Called before a town is released by its members or by an admin. | `getTown()` Town: the town<br>`getActor()` CommandSender: who releases it |
@@ -215,6 +218,8 @@ town call a `TownMemberLeaveEvent`.
 | Event | Cancellable | When | Getters |
 |---|---|---|---|
 | `DefenderPreSpawnEvent` | yes | Called before the defenders of a structure appear to attack an enemy. | `getStructure()` Structure: the defended structure<br>`getTarget()` Player: the enemy they attack<br>`getCount()` int: how many defenders appear |
+| `ExtractorLinkEvent` | no | Called when an extractor has been linked to a collector. | `getExtractor()` Structure: the extractor<br>`getCollector()` Structure: the collector<br>`getPlayer()` Player: the player who made the action |
+| `ExtractorPreLinkEvent` | yes | Called before an extractor is linked to a collector. | `getExtractor()` Structure: the extractor<br>`getCollector()` Structure: the collector<br>`getPlayer()` Player: the player making the action |
 | `StructureDefensePreUpgradeEvent` | yes | Called before the defenses of a structure reach the next level. | `getStructure()` Structure: the structure<br>`getPlayer()` Player: the player making the action<br>`getNewLevel()` int: the defense level it reaches |
 | `StructureDefenseUpgradeEvent` | no | Called when the defenses of a structure have reached the next level. | `getStructure()` Structure: the structure, with its new defense level<br>`getPlayer()` Player: the player making the action |
 | `StructurePickupEvent` | no | Called when a structure has been picked up: it is not placed anymore. | `getStructureId()` UUID: the id of the structure<br>`getType()` StructureType: its type<br>`getTown()` Town: the town it belonged to<br>`getPlayer()` Player: the player making the action |
