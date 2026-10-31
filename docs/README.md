@@ -1,6 +1,6 @@
 # VileKingdoms documentation
 
-Version 1.0.5
+Version 1.0.6
 
 - [Server guide](GUIDE.md) ([PDF](GUIDE.pdf)): how the plugin works, its installation, commands, permissions,
   placeholders, WorldGuard flags and configuration.

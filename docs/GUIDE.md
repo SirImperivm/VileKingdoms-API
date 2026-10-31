@@ -1,6 +1,6 @@
 # VileKingdoms
 
-Version 1.0.5
+Version 1.0.6
 
 VileKingdoms turns the world of the server into a land of kingdoms fighting each other. The players found kingdoms
 and towns, claim the world land by land, build the structures that produce and keep the emeralds, grow their towns
@@ -162,7 +162,9 @@ In the claims of a town, who is not a member cannot break or place blocks, open 
 and redstone components, pick up items or kill the animals and the neutral mobs (`protection.neutral-mobs`), unless the
 town gives the permission to the allies, the neutrals or the enemies (the outsiders button of the town hall). The
 members can do it only when their role has the permission. In the lands with a structure nobody can break or place
-blocks, in peace and in war. The explosions break the blocks of the claims only when `protection.explosions` is true.
+blocks, in peace and in war. The territory is invulnerable to the explosions (TNT, mobs, beds, end crystals) and to the attacks of the mobs, such as
+the fireballs of the ghasts and the withers, also during a war: no block is broken or set on fire, and the decorations,
+the animals and the items are not hurt. The players, the hostile mobs and the defenders still take the damage.
 
 The PvP in the territory of the towns is denied between players of different kingdoms; the members of the same kingdom
 can hit each other only when the friendly fire of the kingdom is on (`/kingdom settings`). Outside the territory every
@@ -233,7 +235,8 @@ A town has three values:
   account and the bank with `/town balance deposit|withdraw`. During a war the banks of both towns are locked.
 
 `/kingdom top` ranks the kingdoms by their emeralds. `/kingdom stats` and `/town stats` show the values of a kingdom and
-of a town to everyone: the emeralds and the worth of a town stay hidden.
+of a town to everyone. The emeralds and the worth of a town are shown only to its members, in `/town stats` and in the
+town hall GUI.
 
 ### Ranks
 
@@ -320,11 +323,16 @@ A structure can have **defenders**: mobs that appear when an enemy (an attacker 
 banned from it) walks into its land, and attack them. They disappear without drops when the enemy leaves.
 
 - The staff sets the spawn points of the defenders while building the schematic (`/structure defense add`).
-- The members with the `manage_structures` permission buy the defense levels from the GUI of the structure: the level
-  N costs N times `defenses.cost` emeralds.
+- The members with the `manage_structures` permission buy and upgrade the defenses with a single button, in the GUI
+  of the structure and in the town hall GUI, up to the highest level: the level N costs N times `defenses.cost` emeralds.
+  The button tells when the structure has no spawn points.
 - The defense level N spawns the mob at the position N of the ranking built by the staff with
   `/structure defense rank` (vanilla or MythicMobs mobs; zombies without a ranking). The `npcs` property of the level
-  sets how many defenders appear.
+  sets how many defenders appear, 2 when not set.
+- A peaceful vanilla mob (a cow, a sheep, a villager...) keeps its look and its stats, but its AI is replaced by a melee
+  attack against the enemy, with `defenses.peaceful-damage` damage when it has no attack of its own. Like every defender
+  it can be killed, whatever the permissions of the town. The bats cannot chase a target, so they are refused. The water
+  mobs fight only in the water, so they stay still on land.
 - The highest level a structure can buy is the `defense-cap` of its schematic, lowered to the cap of a higher level of
   the same structure when that one is lower. Upgrading the structure to a level with a lower cap lowers its defenses,
   without refunds.
@@ -816,7 +824,8 @@ teleports:
 
 # Territory of the towns: who is not a member cannot break or place blocks, open containers, doors and trapdoors, use
 # redstone components, pick up items or kill the animals, unless the town allows it to the allies, the neutrals or the
-# enemies. In the lands with a structure nobody can break or place blocks, in peace and in war.
+# enemies. In the lands with a structure nobody can break or place blocks, in peace and in war. The territory is always
+# invulnerable to the explosions and to the attacks of the mobs, fireballs included.
 protection:
   # Hostile mobs protected like the animals: only the members with the kill_animals permission can kill them.
   neutral-mobs:
@@ -832,7 +841,6 @@ protection:
     - DOLPHIN
     - GOAT
     - TRADER_LLAMA
-  explosions: false # Whether the explosions break the blocks of the claims without structures.
 
 # Worth of the towns: the value of the items in the containers of their claims (chests, barrels, hoppers, furnaces,
 # crafters, droppers, dispensers, shulker boxes...), also inside the structures. The emeralds are not counted.
@@ -919,6 +927,7 @@ wars:
 defenses:
   enabled: true
   cost: 500 # Emeralds paid for each defense level: the level N costs N times this amount.
+  peaceful-damage: 4 # Attack damage of the defenders of a peaceful mob (e.g. a cow) without an attack of its own.
 
 # Party access mode of the towns (Parties plugin): when the leader of a party joins a town, their party joins with them.
 party:
@@ -1096,7 +1105,8 @@ rank-loss:
 #   boost     multiplier of the production of an extractor
 #   capacity  limit of the emeralds of the town hall; for a collector, how much it raises the limit of its town
 #   seats     members living in a residence
-#   npcs      defenders appearing when an enemy enters the land of a defended structure
+#   npcs      defenders appearing when an enemy enters the land of a defended structure, 2 when not set
+#   defense-cap  highest defense level the structure can buy, 1 when not set
 structures:
   town-hall:
     levels:

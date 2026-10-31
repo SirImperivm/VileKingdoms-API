@@ -1,6 +1,6 @@
 # VileKingdoms API
 
-Version 1.0.5
+Version 1.0.6
 
 The API of VileKingdoms lets the addons read the kingdoms, the towns, the structures and the wars of the server, and
 react to everything that happens to them through Bukkit events. Most actions have an event called **before**, that
@@ -27,7 +27,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly "com.github.SirImperivm:VileKingdoms-API:1.0.5"
+    compileOnly "com.github.SirImperivm:VileKingdoms-API:1.0.6"
 }
 ```
 
@@ -44,7 +44,7 @@ dependencies {
 <dependency>
     <groupId>com.github.SirImperivm</groupId>
     <artifactId>VileKingdoms-API</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
     <scope>provided</scope>
 </dependency>
 ```
